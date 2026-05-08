@@ -1,4 +1,4 @@
-name: Remote Deploy
+name: Deploy
 
 on:
   push:
@@ -9,7 +9,7 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Deploying to Server
+      - name: Trigger deploy via deploy-service
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.SSH_HOST }}
@@ -17,33 +17,10 @@ jobs:
           key: ${{ secrets.SSH_KEY }}
           port: ${{ secrets.SSH_PORT }}
           script: |
-            APP_DIR="/srv/apps/test-react-deploy-app"
-            REPO_URL="https://github.com/Pyth0nHater/test-react-deploy-app.git"
-            REPO_BRANCH="main"
-            AUTH_PREFIX=""
+            TOKEN=$(curl -s -X POST http://localhost:8080/api/v1/auth/login \
+              -H "Content-Type: application/json" \
+              -d '{"email":"${{ secrets.DEPLOY_EMAIL }}","password":"${{ secrets.DEPLOY_PASSWORD }}"}' \
+              | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('token',''))")
 
-            if [ -n "${{ secrets.REPO_ACCESS_TOKEN }}" ]; then
-              AUTH_PREFIX="x-access-token:${{ secrets.REPO_ACCESS_TOKEN }}@"
-            fi
-
-            AUTHED_REPO_URL="${REPO_URL/https:\/\//https://${AUTH_PREFIX}}"
-
-            mkdir -p /srv/apps
-
-            if [ ! -d "$APP_DIR/.git" ]; then
-              rm -rf "$APP_DIR"
-              git clone --branch "$REPO_BRANCH" "$AUTHED_REPO_URL" "$APP_DIR"
-            fi
-
-            cd "$APP_DIR" || exit 1
-            git remote set-url origin "$AUTHED_REPO_URL"
-            git fetch origin "$REPO_BRANCH"
-            git reset --hard "origin/$REPO_BRANCH"
-
-            cat > .deploy.env <<'EOF'
-            TRAEFIK_NETWORK=web_network
-            EOF
-
-            docker network create web_network >/dev/null 2>&1 || true
-            docker compose --env-file .deploy.env -f docker-compose.deploy.yml up -d --build --force-recreate --remove-orphans
-            docker image prune -f
+            curl -s -X POST http://localhost:8080/api/v1/repositories/repo_a4e89ac19086165f99cab78c/deploy \
+              -H "Authorization: Bearer $TOKEN"
