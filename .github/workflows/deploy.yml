@@ -1,0 +1,49 @@
+name: Remote Deploy
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploying to Server
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          port: ${{ secrets.SSH_PORT }}
+          script: |
+            APP_DIR="/srv/apps/test-react-deploy-app"
+            REPO_URL="https://github.com/Pyth0nHater/test-react-deploy-app.git"
+            REPO_BRANCH="main"
+            AUTH_PREFIX=""
+
+            if [ -n "${{ secrets.REPO_ACCESS_TOKEN }}" ]; then
+              AUTH_PREFIX="x-access-token:${{ secrets.REPO_ACCESS_TOKEN }}@"
+            fi
+
+            AUTHED_REPO_URL="${REPO_URL/https:\/\//https://${AUTH_PREFIX}}"
+
+            mkdir -p /srv/apps
+
+            if [ ! -d "$APP_DIR/.git" ]; then
+              rm -rf "$APP_DIR"
+              git clone --branch "$REPO_BRANCH" "$AUTHED_REPO_URL" "$APP_DIR"
+            fi
+
+            cd "$APP_DIR" || exit 1
+            git remote set-url origin "$AUTHED_REPO_URL"
+            git fetch origin "$REPO_BRANCH"
+            git reset --hard "origin/$REPO_BRANCH"
+
+            cat > .deploy.env <<'EOF'
+            TRAEFIK_NETWORK=web_network
+            EOF
+
+            docker network create web_network >/dev/null 2>&1 || true
+            docker compose --env-file .deploy.env -f docker-compose.deploy.yml up -d --build --force-recreate --remove-orphans
+            docker image prune -f
