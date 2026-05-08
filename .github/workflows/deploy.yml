@@ -9,18 +9,7 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Trigger deploy via deploy-service
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USER }}
-          key: ${{ secrets.SSH_KEY }}
-          port: ${{ secrets.SSH_PORT }}
-          script: |
-            TOKEN=$(curl -s -X POST http://localhost:8080/api/v1/auth/login \
-              -H "Content-Type: application/json" \
-              -d '{"email":"${{ secrets.DEPLOY_EMAIL }}","password":"${{ secrets.DEPLOY_PASSWORD }}"}' \
-              | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('token',''))")
-
-            curl -s -X POST http://localhost:8080/api/v1/repositories/repo_a4e89ac19086165f99cab78c/deploy \
-              -H "Authorization: Bearer $TOKEN"
+      - name: Trigger deploy
+        run: |
+          curl -f -X POST "${{ secrets.DEPLOY_API_URL }}" \
+            -H "X-Deploy-Token: ${{ secrets.DEPLOY_TOKEN }}"
