@@ -1,122 +1,81 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
+import { useState, useEffect } from 'react'
 import './App.css'
 
-function App() {
-  const [count, setCount] = useState(0)
+const CHECKS = [
+  'Docker image built',
+  'Container started',
+  'Traefik route active',
+  'HTTP 200 OK',
+  'Assets loaded',
+]
+
+const LOG = [
+  '> cloning repository...',
+  '> detected react app profile',
+  '> building docker image...',
+  '> starting container...',
+  '> traefik route registered',
+  '> deployment successful ✓',
+]
+
+export default function App() {
+  const [logLines, setLogLines] = useState<string[]>([LOG[0]])
+
+  useEffect(() => {
+    let i = 1
+    const id = setInterval(() => {
+      if (i >= LOG.length) { clearInterval(id); return }
+      setLogLines(prev => [...prev, LOG[i++]])
+    }, 1200)
+    return () => clearInterval(id)
+  }, [])
 
   return (
-    <>
-      <section id="center">
+    <div className="root">
+      <header>
+        <span className="badge">React 19</span>
+        <span className="badge dim">+ Vite 8</span>
+        <span className="status-dot" />
+        <span className="status-text">live</span>
+      </header>
+
+      <main>
         <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
+          <div className="prompt-line">
+            <span className="prompt">~/deploy$</span>
+            <span className="cmd"> test-react-deploy-app</span>
+            <span className="cursor">█</span>
+          </div>
+          <h1>Deployment<br /><span className="accent">Successful</span></h1>
+          <p>Тестовый макет для проверки развёртывания.<br />Собран и запущен через deploy-service + Traefik.</p>
         </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.tsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
 
-      <div className="ticks"></div>
+        <div className="grid">
+          <div className="card checks">
+            <h2>Checklist</h2>
+            {CHECKS.map(c => (
+              <div key={c} className="check">
+                <span className="tick">✓</span>{c}
+              </div>
+            ))}
+          </div>
 
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
+          <div className="card terminal">
+            <div className="term-bar">
+              <span className="dot r" /><span className="dot y" /><span className="dot g" />
+              <span className="term-title">deploy output</span>
+            </div>
+            <div className="term-body">
+              {logLines.map((l, i) => <div key={i}>{l}</div>)}
+              {logLines.length < LOG.length && <span className="cursor">_</span>}
+            </div>
+          </div>
         </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
+      </main>
 
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
+      <footer>
+        <span>React 19</span><span>Vite 8</span><span>Nginx alpine</span><span>Traefik v3</span>
+      </footer>
+    </div>
   )
 }
-
-export default App
