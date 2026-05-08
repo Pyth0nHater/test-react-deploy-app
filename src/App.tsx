@@ -44,7 +44,7 @@ export default function App() {
 
 			<main>
 				<div className="hero">
-					<div className="fw-label">REACT12</div>
+					<div className="fw-label">REACT</div>
 					<div className="prompt-line">
 						<span className="prompt">~/deploy$</span>
 						<span className="cmd"> test-react-deploy-app</span>
