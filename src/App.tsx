@@ -7,6 +7,7 @@ const CHECKS = [
 	"Traefik route active",
 	"HTTP 200 OK",
 	"Assets loaded",
+	"Auto-redeploy triggered ✓",
 ]
 
 const LOG = [
@@ -53,12 +54,12 @@ export default function App() {
 					<h1>
 						Deployment
 						<br />
-						<span className="accent">Successful</span>
+						<span className="accent">v2 — Auto Deployed</span>
 					</h1>
 					<p>
-						Тестовый макет для проверки развёртывания.
+						Обновление задеплоено автоматически после git push.
 						<br />
-						Собран и запущен через deploy-service + Traefik.
+						Webhook → deploy-service → Docker → Traefik.
 					</p>
 				</div>
 
